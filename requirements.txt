@@ -1,0 +1,7 @@
+torch
+hydra-core
+numpy<2
+tqdm
+torchtext
+pytorch-nlp
+spacy
