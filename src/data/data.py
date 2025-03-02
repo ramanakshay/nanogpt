@@ -1,7 +1,6 @@
-import torch
 from torch.utils.data import DataLoader
 from torchnlp.datasets import multi30k_dataset
-from data.preprocessing import load_tokenizers, load_vocab, tokenize, Collator
+from data.preprocessing import load_tokenizers, load_vocab, Collator
 
 
 class TranslateData(object):
@@ -15,10 +14,10 @@ class TranslateData(object):
         vocab_src, vocab_tgt = load_vocab(self.tokenizer, self.config.vocab_path, self.config.dataset_path)
         self.vocab = {'de': vocab_src, 'en': vocab_tgt}
 
-        collator = Collator(self.tokenizer, self.vocab, device, self.config.max_padding)
+        collator = Collator(self.tokenizer, self.vocab, self.device, self.config.max_padding)
 
         train, val, test = multi30k_dataset(
-            directory=config.dataset_path,
+            directory=self.config.dataset_path,
             train=True,
             dev=True,
             test=True,
@@ -31,18 +30,17 @@ class TranslateData(object):
 
         self.train_dataloader = DataLoader(
             train,
-            batch_size=config.batch_size,
+            batch_size=self.config.batch_size,
             shuffle=True,
             collate_fn=collator,
         )
 
         self.valid_dataloader = DataLoader(
             val,
-            batch_size=config.batch_size,
+            batch_size=self.config.batch_size,
             shuffle=True,
             collate_fn=collator,
         )
 
     def get_dataloaders(self):
         return {'train': self.train_dataloader, 'valid': self.valid_dataloader}
-

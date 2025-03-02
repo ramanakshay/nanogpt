@@ -26,9 +26,11 @@ def load_tokenizers():
 def tokenize(text, tokenizer):
     return [tok.text for tok in tokenizer.tokenizer(text)]
 
+
 def yield_tokens(data_iter, tokenizer, index):
     for from_to_tuple in data_iter:
         yield tokenizer(from_to_tuple[index])
+
 
 def build_vocabulary(spacy_de, spacy_en, dataset_path):
     def tokenize_de(text):
@@ -80,7 +82,6 @@ def load_vocab(tokenizers, vocab_path, dataset_path):
     print(len(vocab_src))
     print(len(vocab_tgt))
     return vocab_src, vocab_tgt
-
 
 
 class Collator(object):
@@ -142,4 +143,4 @@ class Collator(object):
 
         src = torch.stack(src_list)
         tgt = torch.stack(tgt_list)
-        return (src, tgt)
+        return src, tgt

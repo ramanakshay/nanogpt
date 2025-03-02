@@ -32,11 +32,11 @@ class Translator(object):
 
     def greedy_decode(self, src, src_mask, max_len, start_symbol):
         memory = self.transformer.encode(src, src_mask)
-        ys = torch.zeros(1,1).fill_(start_symbol).type_as(src.data)
+        ys = torch.zeros(1, 1).fill_(start_symbol).type_as(src.data)
         for i in range(max_len - 1):
             out = self.transformer.decode(memory, ys, src_mask)
             prob = self.transformer.generator(out[:, -1])
             _, next_word = torch.max(prob, dim=1)
             next_word = next_word.data[0]
-            ys = torch.cat([ys, torch.zeros(1,1).type_as(src.data).fill_(next_word)], dim=1)
+            ys = torch.cat([ys, torch.zeros(1, 1).type_as(src.data).fill_(next_word)], dim=1)
         return ys

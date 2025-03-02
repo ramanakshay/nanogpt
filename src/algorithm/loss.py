@@ -3,7 +3,7 @@ from torch import nn
 
 
 class SimpleLossCompute:
-    "A simple loss compute and train function."
+    """A simple loss compute and train function."""
 
     def __init__(self, generator, criterion):
         self.generator = generator
@@ -12,13 +12,12 @@ class SimpleLossCompute:
     def __call__(self, x, y, norm):
         x = self.generator(x)
         sloss = (
-            self.criterion(
-                x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1)
-            )
-            / norm
+                self.criterion(
+                    x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1)
+                )
+                / norm
         )
         return sloss.data * norm, sloss
-
 
 
 class LabelSmoothing(nn.Module):

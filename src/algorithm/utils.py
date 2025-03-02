@@ -2,6 +2,7 @@ class Batch(object):
     """
         Object for holding a batch of data with mask during training.
     """
+
     def __init__(self, src, tgt=None, pad=2):  # 2 = <blank>
         self.src = src
         self.src_mask = (src == pad)

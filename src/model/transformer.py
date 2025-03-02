@@ -3,6 +3,7 @@ import math
 from torch import nn
 from torch.nn.functional import log_softmax, pad
 
+
 def subsequent_mask(size):
     # Mask out subsequent positions. Boolean mask
     attn_shape = (size, size)
@@ -10,6 +11,7 @@ def subsequent_mask(size):
         torch.uint8
     )
     return subsequent_mask == 1
+
 
 class Embeddings(nn.Module):
     def __init__(self, d_model, vocab):
@@ -58,27 +60,29 @@ class Generator(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, tgt_vocab, d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, dropout):
+    def __init__(self, src_vocab, tgt_vocab, d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward,
+                 dropout):
         super(Transformer, self).__init__()
         self.transformer = nn.Transformer(
-                                d_model=config.d_model,
-                                nhead=config.nhead,
-                                num_encoder_layers=config.num_encoder_layers,
-                                num_decoder_layers=config.num_decoder_layers,
-                                dim_feedforward=config.dim_feedforward,
-                                dropout=config.dropout,
-                                batch_first=True) # first dimension is batch_size
-        self.src_embed = nn.Sequential(Embeddings(config.d_model, src_vocab),
-                                       PositionalEncoding(config.d_model, config.dropout))
-        self.tgt_embed = nn.Sequential(Embeddings(config.d_model, tgt_vocab),
-                                       PositionalEncoding(config.d_model, config.dropout))
-        self.generator = Generator(config.d_model, tgt_vocab)
+            d_model=d_model,
+            nhead=nhead,
+            num_encoder_layers=num_encoder_layers,
+            num_decoder_layers=num_decoder_layers,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
+            batch_first=True)  # first dimension is batch_size
+        self.src_embed = nn.Sequential(Embeddings(d_model, src_vocab),
+                                       PositionalEncoding(d_model, dropout))
+        self.tgt_embed = nn.Sequential(Embeddings(d_model, tgt_vocab),
+                                       PositionalEncoding(d_model, dropout))
+        self.generator = Generator(d_model, tgt_vocab)
 
     def forward(self, src, tgt, src_mask=None, tgt_mask=None):
         "Take in and process masked src and target sequences."
         causal_mask = subsequent_mask(tgt.size(-1))
         src, tgt = self.src_embed(src), self.tgt_embed(tgt)
-        return self.transformer(src=src, tgt=tgt, tgt_mask=causal_mask, src_key_padding_mask=src_mask, tgt_key_padding_mask=tgt_mask)
+        return self.transformer(src=src, tgt=tgt, tgt_mask=causal_mask, src_key_padding_mask=src_mask,
+                                tgt_key_padding_mask=tgt_mask)
 
     def encode(self, src, src_mask=None):
         src = self.src_embed(src)
@@ -87,5 +91,5 @@ class Transformer(nn.Module):
     def decode(self, mem, tgt, mem_mask=None, tgt_mask=None):
         causal_mask = subsequent_mask(tgt.size(-1))
         tgt = self.tgt_embed(tgt)
-        return self.transformer.decoder(tgt=tgt, memory=mem, tgt_mask=causal_mask, tgt_key_padding_mask=tgt_mask, memory_key_padding_mask=mem_mask)
-
+        return self.transformer.decoder(tgt=tgt, memory=mem, tgt_mask=causal_mask, tgt_key_padding_mask=tgt_mask,
+                                        memory_key_padding_mask=mem_mask)
