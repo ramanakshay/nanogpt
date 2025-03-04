@@ -1,9 +1,6 @@
 defaults:
     - _self_
-    - model: gpt2-medium
-
-settings:
-    device: cpu
+    - model: gpt2
 
 data:
     dataset_path: /Users/akshay/canvas/src/data/dataset/multi30k/

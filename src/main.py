@@ -12,6 +12,8 @@ def main(config: DictConfig) -> None:
 
     # ## MODEL ##
     model = GPTModel(config)
+    model.eval()
+    model.to('cuda')
     print('Model Created.')
 
     # ## ALGORITHM ##

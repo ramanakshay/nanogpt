@@ -15,6 +15,9 @@ class GPTModel(object):
 
     def eval(self):
         self.gpt.eval()
+        
+    def to(self, device):
+        self.gpt.to(device)
 
     def predict(self, idx):
         return self.gpt(idx, all_targets=True)
