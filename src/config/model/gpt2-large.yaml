@@ -1,0 +1,9 @@
+from_pretrained: True
+model_name: gpt2-large
+block_size: 1024
+vocab_size: 50257
+n_layer: 36
+n_head: 20
+n_embd: 1280
+dropout: 0.0
+bias: True

@@ -1,3 +1,3 @@
-__all__ = ['Translator']
+__all__ = ['GPTModel']
 
-from .translator import Translator
+from .model import GPTModel

@@ -1,3 +1,7 @@
+defaults:
+    - _self_
+    - model: gpt2-medium
+
 settings:
     device: cpu
 
@@ -6,14 +10,6 @@ data:
     vocab_path: /Users/akshay/canvas/src/data/dataset/vocab.pt
     max_padding: 72
     batch_size: 32
-
-model:
-    d_model: 512
-    nhead: 8
-    num_encoder_layers: 6
-    num_decoder_layers: 6
-    dim_feedforward: 2048
-    dropout: 0.1
 
 algorithm:
     lr: 1.0
