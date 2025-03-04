@@ -1,4 +1,7 @@
 from model import GPTModel
+import tiktoken
+import torch
+
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -9,6 +12,16 @@ def main(config: DictConfig) -> None:
     # ## DATA ##
     # data = TranslateData(config)
     # print('Data Loaded.')
+
+    num_return_sequences = 5
+    max_length = 30
+
+    enc = tiktoken.get_encoding("gpt2")
+    tokens = enc.encode("Hello, I am a large language model,")
+    tokens = torch.tensor(tokens, dtype=torch.long)
+    tokens = tokens.unsqueeze(0).repeat(num_return_sequences, 1)
+    x = tokens.to('cuda')
+
 
     # ## MODEL ##
     model = GPTModel(config)
