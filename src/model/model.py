@@ -8,6 +8,13 @@ class GPTModel:
     def __init__(self, config):
         self.config = config.model
         self.gpt = GPT(self.config)
+
+        if self.config.from_pretrained:
+            self.gpt.load_pretrained(self.config.model_name)
+
+        if config.data.block_size < config.model.block_size:
+            self.gpt.crop_block_size(config.data.block_size)
+
         print("Number of parameters: %.2fM" % (self.get_num_params() / 1e6,))
 
     def train(self):
@@ -20,19 +27,10 @@ class GPTModel:
         self.gpt.to(device)
 
     def get_num_params(self, non_embedding=True):
-        """
-        Return the number of parameters in the model.
-        For non-embedding count (default), the position embeddings get subtracted.
-        The token embeddings would too, except due to the parameter sharing these
-        params are actually used as weights in the final layer, so we include them.
-        """
-        n_params = sum(p.numel() for p in self.gpt.parameters())
-        if non_embedding:
-            n_params -= self.gpt.transformer.wpe.weight.numel()
-        return n_params
+        return self.gpt.get_num_params(non_embedding)
 
     def predict(self, idx):
-        return self.gpt(idx, all_targets=True)
+        return self.gpt(idx, targets=True)
 
     def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
         """
@@ -44,7 +42,7 @@ class GPTModel:
             # if the sequence context is growing too long we must crop it at block_size
             idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
             # forward the model to get the logits for the index in the sequence
-            logits = self.gpt(idx_cond)
+            logits = self.gpt(idx_cond, targets=False)
             # pluck the logits at the final step and scale by desired temperature
             logits = logits[:, -1, :] / temperature
             # optionally crop the logits to only the top k options

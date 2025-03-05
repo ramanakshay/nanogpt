@@ -47,9 +47,6 @@ class GPT(nn.Module):
             if pn.endswith('c_proj.weight'):
                 torch.nn.init.normal_(p, mean=0.0, std=0.02 / math.sqrt(2 * config.n_layer))
 
-        if self.config.from_pretrained:
-            self.load_pretrained()
-
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
@@ -57,6 +54,18 @@ class GPT(nn.Module):
                 torch.nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
+    def get_num_params(self, non_embedding=True):
+        """
+        Return the number of parameters in the model.
+        For non-embedding count (default), the position embeddings get subtracted.
+        The token embeddings would too, except due to the parameter sharing these
+        params are actually used as weights in the final layer, so we include them.
+        """
+        n_params = sum(p.numel() for p in self.parameters())
+        if non_embedding:
+            n_params -= self.transformer.wpe.weight.numel()
+        return n_params
 
     def crop_block_size(self, block_size):
         # model surgery to decrease the block size if necessary
@@ -69,8 +78,7 @@ class GPT(nn.Module):
             if hasattr(block.attn, 'bias'):
                 block.attn.bias = block.attn.bias[:, :, :block_size, :block_size]
 
-    def load_pretrained(self):
-        model_type = self.config.model_name
+    def load_pretrained(self, model_type):
         assert model_type in {'gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'}
 
         sd = self.state_dict()
@@ -104,7 +112,7 @@ class GPT(nn.Module):
                 with torch.no_grad():
                     sd[k].copy_(sd_hf[k])
 
-    def forward(self, idx, all_targets=False):
+    def forward(self, idx, targets=False):
         device = idx.device
         b, t = idx.size()
         assert t <= self.config.block_size, f"Cannot forward sequence of length {t}, block size is only {self.config.block_size}"
@@ -118,7 +126,7 @@ class GPT(nn.Module):
             x = block(x)
         x = self.transformer.ln_f(x)
 
-        if all_targets:
+        if targets:
             # if we are given some desired targets also calculate the loss
             logits = self.lm_head(x)
         else:
