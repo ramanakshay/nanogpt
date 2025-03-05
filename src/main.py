@@ -12,22 +12,32 @@ def main(config: DictConfig) -> None:
     # ## DATA ##
     # data = TranslateData(config)
     # print('Data Loaded.')
+    device = config.settings.device
 
     num_return_sequences = 5
     max_length = 30
 
-    enc = tiktoken.get_encoding("gpt2")
-    tokens = enc.encode("Hello, I am a large language model,")
+    tokenizer = tiktoken.get_encoding("gpt2")
+    tokens = tokenizer.encode("Hello, I am a large language model,")
+    context_size = len(tokens)
     tokens = torch.tensor(tokens, dtype=torch.long)
     tokens = tokens.unsqueeze(0).repeat(num_return_sequences, 1)
-    x = tokens.to('cuda')
+    x = tokens.to(device)
 
 
     # ## MODEL ##
     model = GPTModel(config)
     model.eval()
-    model.to('cuda')
+    model.to(device)
     print('Model Created.')
+
+    x = model.generate(x, max_length, 1.0, 50)
+
+
+    for i in range(num_return_sequences):
+        tokens = x[i, :(context_size+max_length)].tolist()
+        decoded = tokenizer.decode(tokens)
+        print(">", decoded)
 
     # ## ALGORITHM ##
     # algorithm = Trainer(data, model, config)

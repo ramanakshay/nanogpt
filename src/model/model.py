@@ -8,7 +8,7 @@ class GPTModel(object):
     def __init__(self, config):
         self.config = config.model
         self.gpt = GPT(self.config)
-        print("Number of parameters: %.2fM" % (self.get_num_params() / 1e6,))
+        print("Number of parameters: %.2fM" % (self.gpt.get_num_params() / 1e6,))
 
     def train(self):
         self.gpt.train()

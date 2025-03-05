@@ -2,10 +2,12 @@ defaults:
     - _self_
     - model: gpt2
 
+settings:
+    device: cuda
+
 data:
-    dataset_path: /Users/akshay/canvas/src/data/dataset/multi30k/
-    vocab_path: /Users/akshay/canvas/src/data/dataset/vocab.pt
-    max_padding: 72
+    data_dir: /Users/akshay/nanogpt/src/data/datasets/shakespeare/
+    block_size: 200
     batch_size: 32
 
 algorithm:
