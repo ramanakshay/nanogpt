@@ -1,14 +1,10 @@
 defaults:
     - _self_
     - model: gpt2
+    - data: shakespeare
 
-settings:
+system:
     device: cuda
-
-data:
-    data_dir: /Users/akshay/nanogpt/src/data/datasets/shakespeare/
-    block_size: 200
-    batch_size: 32
 
 algorithm:
     lr: 1.0

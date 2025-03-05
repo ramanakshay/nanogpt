@@ -69,18 +69,6 @@ class GPT(nn.Module):
             if hasattr(block.attn, 'bias'):
                 block.attn.bias = block.attn.bias[:, :, :block_size, :block_size]
 
-    def get_num_params(self, non_embedding=True):
-        """
-    Return the number of parameters in the model.
-    For non-embedding count (default), the position embeddings get subtracted.
-    The token embeddings would too, except due to the parameter sharing these
-    params are actually used as weights in the final layer, so we include them.
-        """
-        n_params = sum(p.numel() for p in self.parameters())
-        if non_embedding:
-            n_params -= self.transformer.wpe.weight.numel()
-        return n_params
-
     def load_pretrained(self):
         model_type = self.config.model_name
         assert model_type in {'gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'}

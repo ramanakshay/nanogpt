@@ -2,10 +2,10 @@ import os
 import torch
 import numpy as np
 
-class TextData(object):
+class TextData:
     def __init__(self, config):
         self.config = config.data
-        self.device = config.settings.device
+        self.device = config.system.device
         self.data_dir = self.config.data_dir
         self.batch_size = self.config.batch_size
         self.block_size = self.config.block_size

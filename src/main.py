@@ -12,7 +12,7 @@ def main(config: DictConfig) -> None:
     # ## DATA ##
     # data = TranslateData(config)
     # print('Data Loaded.')
-    device = config.settings.device
+    device = config.system.device
 
     num_return_sequences = 5
     max_length = 30
