@@ -1,4 +1,6 @@
-
+import os
+import torch
+import numpy as np
 
 class TextData(object):
     def __init__(self, config):
