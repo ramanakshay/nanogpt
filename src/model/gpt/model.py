@@ -1,8 +1,7 @@
 import math
 import torch
 import torch.nn as nn
-
-from model.nanogpt.layers import LayerNorm, CausalSelfAttention, MLP
+from model.gpt.layers import LayerNorm, CausalSelfAttention, MLP
 
 class GPTBlock(nn.Module):
 

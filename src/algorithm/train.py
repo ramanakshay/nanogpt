@@ -1,10 +1,6 @@
-import time
 import torch
-from torch import nn
-from torch.optim.lr_scheduler import LambdaLR
-from algorithm.utils import Batch
-from algorithm.loss import SimpleLossCompute, LabelSmoothing
-
+import torch.nn as nn
+import torch.nn.functional as F
 import inspect
 
 def configure_optimizers(model, weight_decay, learning_rate, betas, device_type):
@@ -55,7 +51,20 @@ class Trainer:
         self.model = model
         self.config = config.algorithm
 
-        self.optimizer = None
-        self.loss = None
+        self.optimizer = torch.optim.AdamW(self.model.gpt.parameters(), lr=self.config.lr)
+        self.loss_func = (lambda logits, targets:
+                         F.cross_entropy(
+                             logits.view(-1, logits.size(-1)),
+                             targets.view(-1)))
+
+    def run_epoch(self):
+        x,y = self.data.get_batch()
+        for i in range(50):
+            self.optimizer.zero_grad()
+            logits, targets = self.model.predict(x), y
+            loss = self.loss_func(logits, targets)
+            loss.backward()
+            self.optimizer.step()
+            print(f"Step {i}, Loss: {loss.item()}")
         
 

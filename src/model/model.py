@@ -1,7 +1,6 @@
 import torch
 import torch.nn.functional as F
-
-from model.nanogpt import GPT
+from model.gpt import GPT
 
 
 class GPTModel:

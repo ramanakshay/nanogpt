@@ -1,14 +1,15 @@
 defaults:
     - _self_
-    - model: gpt2
-    - data: shakespeare
+    - model: custom
 
 system:
-    device: cuda
+    device: cpu
+
+data:
+    data_dir: /Users/akshay/nanogpt/src/data/datasets/shakespeare/
+    batch_size: 4
+    block_size: 32
+
 
 algorithm:
-    lr: 1.0
-    warmup: 3000
-    accum_iter: 10
-    smoothing: 0.1
-    epochs: 8
+    lr: 3e-4

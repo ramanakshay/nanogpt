@@ -166,3 +166,8 @@ cython_debug/
 
 # Hydra Outputs
 src/outputs/
+
+# Datasets (everything except prepare.py and readme)
+src/data/datasets/*
+!src/data/datasets/*/prepare.py
+!src/data/datasets/*/readme.md
