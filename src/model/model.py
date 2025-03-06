@@ -6,13 +6,20 @@ from model.gpt import GPT
 class GPTModel:
     def __init__(self, config):
         self.config = config.model
+        self.device = config.system.device
+
         self.gpt = GPT(self.config)
+        self.gpt.to(self.device)
 
         if self.config.from_pretrained:
             self.gpt.load_pretrained(self.config.model_name)
 
         if config.data.block_size < config.model.block_size:
             self.gpt.crop_block_size(config.data.block_size)
+
+        if config.system.to_compile:
+            self.gpt = torch.compile(self.gpt)
+            print("GPT model compiled.")
 
         print("Number of parameters: %.2fM" % (self.get_num_params() / 1e6,))
 

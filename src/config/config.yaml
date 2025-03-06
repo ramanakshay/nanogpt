@@ -3,12 +3,13 @@ defaults:
     - model: custom
 
 system:
-    device: cpu
+    device: cuda
+    to_compile: True
 
 data:
-    data_dir: /Users/akshay/nanogpt/src/data/datasets/shakespeare/
-    batch_size: 4
-    block_size: 32
+    data_dir: /scratch/ar8692/nanogpt/src/data/datasets/shakespeare
+    batch_size: 32
+    block_size: 1024
 
 
 algorithm:

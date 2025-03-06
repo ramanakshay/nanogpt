@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -50,6 +51,7 @@ class Trainer:
         self.data = data
         self.model = model
         self.config = config.algorithm
+        self.device = config.system.device
 
         self.optimizer = torch.optim.AdamW(self.model.gpt.parameters(), lr=self.config.lr)
         self.loss_func = (lambda logits, targets:
@@ -58,13 +60,21 @@ class Trainer:
                              targets.view(-1)))
 
     def run_epoch(self):
-        x,y = self.data.get_batch()
+
         for i in range(50):
+            ts = time.time()
+            x,y = self.data.get_batch()
+            x,y = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad()
-            logits, targets = self.model.predict(x), y
-            loss = self.loss_func(logits, targets)
+            with torch.autocast(device_type=self.device, dtype=torch.bfloat16):
+                logits, targets = self.model.predict(x), y
+                loss = self.loss_func(logits, targets)
             loss.backward()
             self.optimizer.step()
-            print(f"Step {i}, Loss: {loss.item()}")
+            torch.cuda.synchronize()
+            te = time.time()
+            dt = (te-ts)*1000
+            tokens_per_sec = (self.data.batch_size * self.data.block_size) / (te - ts)
+            print(f"Step {i}, Loss: {loss.item()}, dt: {dt:.2f}ms, tok/sec: {tokens_per_sec}")
         
 

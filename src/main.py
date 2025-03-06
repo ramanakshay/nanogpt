@@ -2,6 +2,8 @@ from data import TextData
 from model import GPTModel
 from algorithm import Trainer
 
+import torch
+
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
@@ -10,11 +12,14 @@ from omegaconf import DictConfig, OmegaConf
 def main(config: DictConfig) -> None:
     # ## DATA ##
     data = TextData(config)
-    print('Data Loaded.')
+    print('Data loaded.')
 
     # ## MODEL ##
     model = GPTModel(config)
-    print('Model Created.')
+
+    torch.set_float32_matmul_precision('high')
+
+    print('Model created.')
 
     # ## ALGORITHM ##
     algorithm = Trainer(data, model, config)
