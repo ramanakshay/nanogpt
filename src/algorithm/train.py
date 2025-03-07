@@ -2,6 +2,7 @@ import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.optim.lr_scheduler import LambdaLR
 import inspect
 
 def configure_optimizers(model, weight_decay, learning_rate, betas, device_type):
@@ -46,6 +47,19 @@ def estimate_mfu(model, fwdbwd_per_iter, dt):
     mfu = flops_achieved / flops_promised
     return mfu
 
+def get_lr(it, warmup_iters, lr_decay_iters, min_lr, lr):
+    # 1) linear warmup for warmup_iters steps
+    if it < warmup_iters:
+        return lr * (it + 1) / (warmup_iters + 1)
+    # 2) if it > lr_decay_iters, return min learning rate
+    if it > lr_decay_iters:
+        return min_lr
+    # 3) in between, use cosine decay down to min learning rate
+    decay_ratio = (it - warmup_iters) / (lr_decay_iters - warmup_iters)
+    assert 0 <= decay_ratio <= 1
+    coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio)) # coeff ranges 0..1
+    return min_lr + coeff * (lr - min_lr)
+
 class Trainer:
     def __init__(self, data, model, config):
         self.data = data
@@ -53,11 +67,20 @@ class Trainer:
         self.config = config.algorithm
         self.device = config.system.device
 
-        self.optimizer = torch.optim.AdamW(self.model.gpt.parameters(), lr=self.config.lr)
         self.loss_func = (lambda logits, targets:
                          F.cross_entropy(
                              logits.view(-1, logits.size(-1)),
                              targets.view(-1)))
+
+        self.optimizer = torch.optim.AdamW(self.model.gpt.parameters(),
+                                           lr=self.config.lr,
+                                           betas=(0.9, 0.95),eps=1e-8)
+
+        self.scheduler = LambdaLR(optimizer=self.optimizer,
+                                  lr_lambda=lambda it: rate(
+                                      it, self.config.warmup_iters, self.config.lr_decay_iters,
+                                      self.config.min_lr, self.config.lr
+                                  ))
 
     def run_epoch(self):
 
@@ -70,11 +93,14 @@ class Trainer:
                 logits, targets = self.model.predict(x), y
                 loss = self.loss_func(logits, targets)
             loss.backward()
+            norm = torch.nn.utils.clip_grad_norm_(self.model.gpt.parameters(), 1.0)
             self.optimizer.step()
+            if self.config.decay_lr:
+                self.scheduler.step()
             torch.cuda.synchronize()
             te = time.time()
             dt = (te-ts)*1000
             tokens_per_sec = (self.data.batch_size * self.data.block_size) / (te - ts)
-            print(f"Step {i}, Loss: {loss.item()}, dt: {dt:.2f}ms, tok/sec: {tokens_per_sec}")
+            print(f"Step {i}, Loss: {loss.item()}| norm: {norm:.4f}| dt: {dt:.2f}ms, tok/sec: {tokens_per_sec}")
         
 

@@ -1,16 +1,10 @@
 defaults:
-    - _self_
+    - data: shakespeare
     - model: custom
+    - algorithm: train
+    - _self_
 
 system:
-    device: cuda
+    device: cpu
     to_compile: True
-
-data:
-    data_dir: /scratch/ar8692/nanogpt/src/data/datasets/shakespeare
-    batch_size: 32
-    block_size: 1024
-
-
-algorithm:
-    lr: 3e-4
+    dtype: bfloat16
