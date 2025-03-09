@@ -83,6 +83,5 @@ def main(config: DictConfig) -> None:
     if state.is_ddp:
         destroy_process_group()
 
-
 if __name__ == "__main__":
     main()

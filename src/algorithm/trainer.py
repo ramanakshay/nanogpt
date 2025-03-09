@@ -2,7 +2,6 @@ import time
 import torch
 import torch.nn.functional as F
 
-
 from algorithm.optimizer import configure_optimizers, get_lr
 
 class Trainer:

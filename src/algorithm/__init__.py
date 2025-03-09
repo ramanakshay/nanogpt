@@ -1,3 +1,3 @@
 __all__ = ['Trainer']
 
-from .train import Trainer
+from .trainer import Trainer
