@@ -1,0 +1,38 @@
+defaults:
+    - model: custom
+    - _self_
+
+system:
+    device: cuda
+    backend: 'nccl'
+    dtype: float16
+    to_compile: True
+
+data:
+    data_dir: /scratch/ar8692/nanogpt/src/data/datasets/shakespeare
+    batch_size: 64
+    block_size: 1024
+
+algorithm:
+    # training
+    max_iters: 50
+    grad_accum: 4
+
+    # eval
+    eval_iters: 10
+    eval_interval: 3
+
+    # optimizer
+    lr: 6e-4
+    weight_decay: 1e-1
+    betas: [0.9, 0.95]
+    eps: 1e-8
+
+    # norm
+    grad_clip: 1.0
+
+    # scheduler
+    decay_lr: True # whether to decay the learning rate
+    warmup_iters: 10 # how many steps to warm up for
+    lr_decay_iters: ${algorithm.max_iters} # should be ~= max_iters per Chinchilla
+    min_lr: 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla

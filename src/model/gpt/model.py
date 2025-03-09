@@ -85,7 +85,6 @@ class GPT(nn.Module):
         sd_keys = [k for k in sd_keys if not k.endswith('.attn.bias')]  # discard this mask / buffer, not a param
 
         from transformers import GPT2LMHeadModel
-        print("Loading weights from pretrained gpt: %s" % model_type)
 
         # init a huggingface/transformers model
         model_hf = GPT2LMHeadModel.from_pretrained(model_type)

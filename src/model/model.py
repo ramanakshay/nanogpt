@@ -1,39 +1,51 @@
 import torch
 import torch.nn.functional as F
 from model.gpt import GPT
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 class GPTModel:
-    def __init__(self, config):
+    def __init__(self, config, state):
         self.config = config.model
+        self.state = state
         self.device = config.system.device
 
         self.gpt = GPT(self.config)
-        self.gpt.to(self.device)
+        self.gpt.to(self.state.device)
 
         if self.config.from_pretrained:
-            self.gpt.load_pretrained(self.config.model_name)
+            model_name = self.config.model_name
+            self.gpt.load_pretrained(model_name)
+            if self.state.is_master_process:
+                print("Loading weights from pretrained gpt: %s" % model_name)
 
         if config.data.block_size < config.model.block_size:
+            if self.state.is_master_process:
+                print("Cropping block size.")
+            self.config.block_size = config.data.block_size
             self.gpt.crop_block_size(config.data.block_size)
 
         if config.system.to_compile:
             self.gpt = torch.compile(self.gpt)
-            print("GPT model compiled.")
+            if self.state.is_master_process:
+                print("GPT model compiled.")
 
-        print("Number of parameters: %.2fM" % (self.get_num_params() / 1e6,))
+        if self.state.is_master_process:
+            print("Number of parameters: %.2fM" % (self.gpt.get_num_params() / 1e6,))
+
+        if self.state.is_ddp:
+            self.gpt = DDP(self.gpt, device_ids=[self.state.local_rank])
 
     def train(self):
         self.gpt.train()
 
     def eval(self):
         self.gpt.eval()
-        
-    def to(self, device):
-        self.gpt.to(device)
 
-    def get_num_params(self, non_embedding=True):
-        return self.gpt.get_num_params(non_embedding)
+    def get_raw_model(self):
+        if self.state.is_ddp:
+            return self.gpt.module
+        return self.gpt
 
     def predict(self, idx):
         return self.gpt(idx, targets=True)
