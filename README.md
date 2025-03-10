@@ -3,7 +3,7 @@
 Generative Pre-trained Transformers (GPTs) are a class of next-word prediction models based on the transformer architecture. This projects reimplements [nanoGPT](https://github.com/karpathy/nanoGPT), a repository to train/finetune medium-sized GPT models.
 
 <p align="center">
-  <img width="40%" alt="GPT Architecture" src="assets/gpt_architecture.svg" >
+  <img width="45%" alt="GPT Architecture" src="assets/gpt_architecture.svg" >
 </p>
 
 
