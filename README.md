@@ -1,103 +1,77 @@
-# canvas
+# nanoGPT: Generative Pre-trained Transformer
 
-A simple, flexible, and modular pytorch template for your deep learning projects. There are multiple templates available for different kinds of machine learning tasks. **Switch to the appropriate branch** from above and see the installation section to download the template:
+Generative Pre-trained Transformers (GPTs) are a class of next-word prediction models based on the transformer architecture. This projects reimplements [nanoGPT](https://github.com/karpathy/nanoGPT), a repository to train/finetune medium-sized GPT models.
 
-- Supervised Learning (SL)
-- Reinforcement Learning (RL)
-- Self-Supervised Learning (SSL)
-
-# Table Of Contents
-
--  [Installation](#installation)
-    - [Requirements](#requirements)
--  [Details](#details)
-    -  [Folder Structure](#folder-structure)
-    -  [Project Architecture](#project-architecture)
- -  [TODO](#todo)
- -  [Contributing](#contributing)
- -  [License](#license)
-
-# Installation
-
-1.  Clone the repository and go to the project folder.
-```
-git clone https://github.com/ramanakshay/canvas --depth 1 --branch ssl
-cd canvas
-```
-
-2. Reset git history.
-```
-rm -rf .git
-git init
-git add --all
-git commit -m “initial canvas commit”
-```
-
-3. Install dependencies from requirements file. Make sure to create a virtual/conda environment before running this command.
-```
-pip install -r requirements.txt
-```
-
-4. Test the code.
-```
-python main.py
-```
-
-## Requirements
-- [pytorch](https://pytorch.org/) (An open source deep learning platform)
-- [hydra](https://hydra.cc/) (A framework for configuring complex applications)
+<p align="center">
+  <img width="80%" alt="GPT Architecture" src="assets/gpt_architecture.svg" >
+</p>
 
 
-# Details
+## Data
 
-## Folder Structure
-```
-├──  model              - this folder contains all code (networks, layers) of the model
-│   ├── weights
-│   ├── classifier.py
-│   ├── network.py
-│   └── layers.py
-│
-├── data               - this folder contains code relevant to the data and datasets
-│   ├── datasets
-│   └── data_loader.py
-│
-├── algorithm             - this folder contains different algorithms of your project
-│   ├── train.py
-│   └── test.py
-│
-│
-├──  config
-│    └── config.yaml  - YAML config file for project
-│
-│
-├──  utils            - this (optional) folder contains utilities of your project
-│    └── utils.py
-│
-│
-└── main.py           - entry point of the project
+The GPT-2 model is trained on the OpenWebText dataset, an open reproduction of OpenAI's (private) WebText. You can also finetune a pretrained GPT-2 model on the TinyShakespeare dataset, which consists of the works of Shakespeare. The dataset is tokenized using the BPE tokenizer from the tiktoken library. Run the command below to download and tokenize the dataset:
 
 ```
+# navigate to the datasets folder
+cd src/data/datasets
 
-## Project Architecture
+# download openwebtext dataset
+python openwebtext/prepare.py
 
-The main idea behind this template is to model all machine learning tasks as interactions between an agent/model with its environment or external data. All components of the template are built around this core idea. This architecture is inspired from the agent-environment interface in reinforcement learning.
+# download shakespeare dataset
+python shakespeare/prepare.py
+```
 
-<div align="center">
+This creates a `train.bin` and `val.bin` in that data directory. Once downloaded, update `data_dir` in the config with the absolute path of the folder containing the bin files.
 
-<img align="center" src="assets/images/architecture.svg">
+```
+# inside train_gpt2.yaml
+...
+data:
+    data_dir: path_to_bin_files
+...
+```
 
-</div>
+## Model
 
-# TODO
+The GPT model supports the following methods:
 
-- [ ] Support for loggers
+**`model.predict(idx: Tensor, targets=True: Boolean)`**
+
+Takes a conditioning sequence of indices idx (LongTensor of shape (b,t)), returns target prediction for each input token (`targets=True`) or just for the last token (`targets=False`)
+
+**`model.generate(idx: LongTensor, max_new_tokens: Integer, temperature=1.0: Integer, top_k=None: Integer)`**
+
+Takes a conditioning sequence of indices idx (LongTensor of shape (b,t)) and complete the sequence max_new_tokens times, feeding the predictions back into the model each time.
+
+You can initialize the model from pretrained HuggingFace checkpoints. Select any of pretrained models listed in the `config/model` folder by updating the config as follows:
+
+```
+├── config/model             
+│   ├── gpt2-large.yaml
+│   ├── gpt2-medium.yaml
+│   ├── gpt2-xl.yaml
+│   └── gpt2.yaml
 
 
-# Contributing
+# inside finetune_shakespeare.yaml
+defaults:
+    - model: gpt2-xl
+    - _self_
+...
+```
+
+
+## To-dos
+
 Any kind of enhancement or contribution is welcomed.
 
+- [ ] Evaluation script
+- [ ] Benchmarking script
+- [ ] Support for loggers
+      
+## References
 
-# License
 
-This project is licensed under the MIT License. See LICENSE for more details.
+
+
