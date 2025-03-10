@@ -39,7 +39,7 @@ def setup(config):
                               "global_rank": global_rank,
                               "world_size": world_size})
 
-    # expected tokens periter
+    # expected tokens per iter
     tokens_per_iter = config.algorithm.grad_accum * world_size * config.data.batch_size * config.data.block_size
     if state.is_master_process:
         print(f"tokens per iteration will be: {tokens_per_iter:,}")
