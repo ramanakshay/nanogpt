@@ -120,7 +120,7 @@ Any kind of enhancement or contribution is welcomed.
 
 [2] [Let's reproduce GPT-2 (124M)](https://www.youtube.com/watch?v=l8pRSuU81PU): Video tutorial building GPT-2 from scratch.
 
-[3] [The Illustrated GPT-2](https://jalammar.github.io/illustrated-gpt2/): Visual explanation of gpt-2 model and attention mechanism.
+[3] [The Illustrated GPT-2](https://jalammar.github.io/illustrated-gpt2/): Visual explanation of GPT-2 and attention mechanism.
 
 [4] [GPT-3 Paper](https://arxiv.org/abs/2005.14165): Language Models are Few-Shot Learners
 
