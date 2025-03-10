@@ -62,6 +62,7 @@ def setup(config):
 
 @hydra.main(version_base=None, config_path="config", config_name="train")
 def main(config: DictConfig) -> None:
+    print(config)
     state, ctx = setup(config)
 
     ## DATA ##

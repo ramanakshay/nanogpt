@@ -1,42 +1,32 @@
 defaults:
+    - model: gpt2-xl
     - _self_
 
 ##########################################################################
-# these make the total batch size be ~0.5M
-# 64 batch size * 1024 block size * 8 gradaccum * 1 GPU(s) = 524288 tokens
+# effective batchsize
+# 32 batch size * 1024 block size * 1 gradaccum * 1 GPU(s) = 32768 tokens/iter
 
-# max_iterse goal to process 300B tokens
-# 524288 tokens/iter * 600000 iter= 300B tokens
+# shakespeare has 301,966 tokens, so 1 epoch ~= 10 iters
+# running about 2 epochs for finetuning
 ##########################################################################
 
 system:
     device: cuda
     backend: 'nccl'
-    dtype: float16
-    to_compile: True
-
-model:
-    from_pretrained: False
-    model_name: None
-    block_size: 1024
-    vocab_size: 50304
-    n_layer: 12
-    n_head: 12
-    n_embd: 768
-    dropout: 0.0
-    bias: True
+    dtype: bfloat16
+    to_compile: False
 
 data:
-    data_dir: /scratch/ar8692/nanogpt/src/data/datasets/openwebtext/
-    batch_size: 64 # choose batch size that fills GPU memory
+    data_dir: /scratch/ar8692/nanogpt/src/data/datasets/shakespeare/
+    batch_size: 1 # choose batch size that fills GPU memory
     block_size: 1024
 
 algorithm:
-    max_iters: 600000
-    grad_accum: 8
+    max_iters: 20
+    grad_accum: 32
 
     # optimizer
-    lr: 6e-4
+    lr: 3e-5
     weight_decay: 1e-1
     betas: [0.9, 0.95]
     eps: 1e-8
