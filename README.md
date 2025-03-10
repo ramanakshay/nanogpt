@@ -116,7 +116,7 @@ Any kind of enhancement or contribution is welcomed.
       
 ## References
 
-[1] [nanoGPT Repository](https://arxiv.org/abs/1706.03762): nanoGPT github code repository with more information.
+[1] [nanoGPT Repository](https://github.com/karpathy/nanoGPT): nanoGPT github code repository with more information.
 
 [2] [Let's reproduce GPT-2 (124M)](https://www.youtube.com/watch?v=l8pRSuU81PU): Video tutorial building GPT-2 from scratch.
 
