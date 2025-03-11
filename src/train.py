@@ -63,6 +63,12 @@ def setup(config):
     return state, ctx
 
 
+def cleanup(state):
+    if state.is_ddp:
+        destroy_process_group()
+    
+
+
 @hydra.main(version_base=None, config_path="config", config_name="train")
 def main(config: DictConfig) -> None:
     ## SETUP ##
@@ -84,8 +90,8 @@ def main(config: DictConfig) -> None:
     if state.is_master_process:
         print('Done!')
 
-    if state.is_ddp:
-        destroy_process_group()
+    ## CLEANUP ##
+    cleanup(state)
 
 if __name__ == "__main__":
     main()
