@@ -11,6 +11,9 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 def setup(config):
+    """
+    Initial setup code. Returns the process state (device, rank, worldsize) and context for automatic mixed precision.
+    """
     # ddp init
     is_ddp = int(os.environ.get('RANK', -1)) != -1
     if is_ddp:
@@ -62,7 +65,7 @@ def setup(config):
 
 @hydra.main(version_base=None, config_path="config", config_name="train")
 def main(config: DictConfig) -> None:
-    print(config)
+    ## SETUP ##
     state, ctx = setup(config)
 
     ## DATA ##
