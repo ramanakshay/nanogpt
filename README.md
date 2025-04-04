@@ -81,7 +81,7 @@ Before running the training script, update the config file based on your hardwar
 
 1. To run on a single GPU, example:
 ```
-python train.py --batch_size=32 --compile=False
+python train.py
 ```
 
 2. To run with DDP on 4 gpus on 1 node, example:

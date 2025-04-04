@@ -5,12 +5,12 @@ from model.gpt.layers import LayerNorm, CausalSelfAttention, MLP
 
 class GPTBlock(nn.Module):
 
-    def __init__(self, config):
+    def __init__(self, block_size, n_embd, n_head, bias, dropout):
         super().__init__()
-        self.ln_1 = LayerNorm(config.n_embd, bias=config.bias)
-        self.attn = CausalSelfAttention(config)
-        self.ln_2 = LayerNorm(config.n_embd, bias=config.bias)
-        self.mlp = MLP(config)
+        self.ln_1 = LayerNorm(n_embd, bias=bias)
+        self.attn = CausalSelfAttention(block_size, n_embd, n_head, bias, dropout)
+        self.ln_2 = LayerNorm(n_embd, bias=bias)
+        self.mlp = MLP(n_embd, bias, dropout)
 
     def forward(self, x):
         x = x + self.attn(self.ln_1(x))
@@ -19,20 +19,18 @@ class GPTBlock(nn.Module):
 
 class GPT(nn.Module):
 
-    def __init__(self, config):
+    def __init__(self, vocab_size=50257, block_size=1024, n_layer=4, n_embd=1024, n_head=2, dropout=0.0, bias=True):
         super().__init__()
-        assert config.vocab_size is not None
-        assert config.block_size is not None
-        self.config = config
+        self.block_size = block_size
 
         self.transformer = nn.ModuleDict(dict(
-            wte=nn.Embedding(config.vocab_size, config.n_embd),
-            wpe=nn.Embedding(config.block_size, config.n_embd),
-            drop=nn.Dropout(config.dropout),
-            h=nn.ModuleList([GPTBlock(config) for _ in range(config.n_layer)]),
-            ln_f=LayerNorm(config.n_embd, bias=config.bias),
-        ))
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+                                             wte=nn.Embedding(vocab_size, n_embd),
+                                             wpe=nn.Embedding(block_size, n_embd),
+                                             drop=nn.Dropout(dropout),
+                                             h=nn.ModuleList([GPTBlock(block_size, n_embd, n_head, bias, dropout) for _ in range(n_layer)]),
+                                             ln_f=LayerNorm(n_embd, bias=bias),
+                                         ))
+        self.lm_head = nn.Linear(n_embd, vocab_size, bias=False)
         # with weight tying when using torch.compile() some warnings get generated:
         # "UserWarning: functional_call was passed multiple values for tied weights.
         # This behavior is deprecated and will be an error in future versions"
@@ -44,7 +42,7 @@ class GPT(nn.Module):
         # apply special scaled init to the residual projections, per GPT-2 paper
         for pn, p in self.named_parameters():
             if pn.endswith('c_proj.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02 / math.sqrt(2 * config.n_layer))
+                torch.nn.init.normal_(p, mean=0.0, std=0.02 / math.sqrt(2 * n_layer))
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -70,8 +68,8 @@ class GPT(nn.Module):
         # model surgery to decrease the block size if necessary
         # e.g. we may load the GPT2 pretrained model checkpoint (block size 1024)
         # but want to use a smaller block size for some smaller, simpler model
-        assert block_size <= self.config.block_size
-        self.config.block_size = block_size
+        assert block_size <= self.block_size
+        self.block_size = block_size
         self.transformer.wpe.weight = nn.Parameter(self.transformer.wpe.weight[:block_size])
         for block in self.transformer.h:
             if hasattr(block.attn, 'bias'):
@@ -113,9 +111,8 @@ class GPT(nn.Module):
     def forward(self, idx, targets=False):
         device = idx.device
         b, t = idx.size()
-        assert t <= self.config.block_size, f"Cannot forward sequence of length {t}, block size is only {self.config.block_size}"
+        assert t <= self.block_size, f"Cannot forward sequence of length {t}, block size is only {self.block_size}"
         pos = torch.arange(0, t, dtype=torch.long, device=device)  # shape (t)
-
         # forward the GPT model itself
         tok_emb = self.transformer.wte(idx)  # token embeddings of shape (b, t, n_embd)
         pos_emb = self.transformer.wpe(pos)  # position embeddings of shape (t, n_embd)
@@ -123,12 +120,5 @@ class GPT(nn.Module):
         for block in self.transformer.h:
             x = block(x)
         x = self.transformer.ln_f(x)
-
-        if targets:
-            # if we are given some desired targets also calculate the loss
-            logits = self.lm_head(x)
-        else:
-            # inference-time mini-optimization: only forward the lm_head on the very last position
-            logits = self.lm_head(x[:, [-1], :])  # note: using list [-1] to preserve the time dim
-
+        logits = self.lm_head(x)
         return logits

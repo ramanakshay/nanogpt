@@ -10,7 +10,14 @@ class GPTModel:
         self.state = state
         self.device = config.system.device
 
-        self.gpt = GPT(self.config)
+        self.gpt = GPT(
+                vocab_size=self.config.vocab_size,
+                block_size=self.config.block_size,
+                n_layer=self.config.n_layer,
+                n_embd=self.config.n_embd,
+                n_head=self.config.n_head,
+                dropout=self.config.dropout,
+                bias=self.config.bias)
         self.gpt.to(self.state.device)
 
         if self.config.from_pretrained:
